@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Cooking Mode - {{ recipe.title }} | The Savor Table{% endblock %}
+
+{% block content %}
+<section style="padding: 4rem 0 6rem; min-height: 80vh;">
+    <div class="container" style="max-width: 900px;">
+        <!-- Header Controls Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color); padding: 1rem 1.5rem; border-radius: var(--radius-pill); box-shadow: var(--shadow-subtle);">
+            <a href="{{ url_for('recipe_details', recipe_id=recipe.id) }}" class="btn btn-ghost" style="padding: 0.4rem 1rem; font-size: 0.85rem;">
+                <span>✕ Exit Cooking Mode</span>
+            </a>
+
+            <div style="font-weight: 700; font-size: 1rem; color: var(--terracotta);">
+                🍳 {{ recipe.title }}
+            </div>
+
+            <span id="stepCounterBadge" class="badge-sage">Step 1 of {{ instructions_list|length if instructions_list else 1 }}</span>
+        </div>
+
+        <!-- Main Cooking Step Viewer Card -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 3.5rem 3rem; box-shadow: var(--shadow-card); position: relative;">
+            
+            <!-- Current Step Instruction Focus Card -->
+            <div style="background: var(--bg-primary); border: 2px solid var(--terracotta); border-radius: var(--radius-md); padding: 2.5rem 2rem; margin-bottom: 3rem; box-shadow: var(--shadow-subtle);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+                    <span id="stepBadge" class="section-tag" style="font-size: 0.95rem; font-weight: 800; color: #ffffff; background: var(--terracotta); padding: 0.3rem 0.9rem; border-radius: var(--radius-pill); letter-spacing: 0.15em;">STEP 01</span>
+                    <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">Use ← → keys to navigate</span>
+                </div>
+                
+                <div id="stepInstructionText" style="font-size: 1.6rem; line-height: 1.7; color: var(--text-main); font-weight: 600; min-height: 90px; display: flex; align-items: center;">
+                    {% if instructions_list and instructions_list|length > 0 %}
+                        {{ instructions_list[0] }}
+                    {% else %}
+                        {{ recipe.instructions }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Ingredients Checklist Reference -->
+            {% if recipe.ingredients %}
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.8rem; margin-bottom: 2.5rem;">
+                    <h4 style="font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <span>🛒</span> <span>Needed Ingredients Checklist</span>
+                    </h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.8rem;">
+                        {% for ing in recipe.ingredients %}
+                            <label style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.9rem; border-radius: var(--radius-pill); font-size: 0.88rem; cursor: pointer; user-select: none;">
+                                <input type="checkbox" style="accent-color: var(--terracotta); width: 16px; height: 16px;">
+                                <span style="color: var(--text-main);"><strong>{{ ing.quantity if ing.quantity else '' }} {{ ing.unit if ing.unit else '' }}</strong> {{ ing.name }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Step Navigation Buttons -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-outline-dark" id="prevStepBtn" onclick="prevStep()" disabled style="padding: 0.8rem 1.8rem;">
+                    <span>← Previous Step</span>
+                </button>
+
+                <button type="button" class="btn btn-terracotta" id="nextStepBtn" onclick="nextStep()" style="padding: 0.8rem 2.2rem;">
+                    <span>Next Step</span> <span>→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const steps = {{ instructions_list | tojson | safe if instructions_list else [recipe.instructions] | tojson | safe }};
+let currentStepIndex = 0;
+
+function updateStepUI() {
+    const textEl = document.getElementById('stepInstructionText');
+    const badgeEl = document.getElementById('stepBadge');
+    const counterEl = document.getElementById('stepCounterBadge');
+    const prevBtn = document.getElementById('prevStepBtn');
+    const nextBtn = document.getElementById('nextStepBtn');
+
+    if (!steps || steps.length === 0) return;
+
+    // Clean up any leading step numbers from step string just in case
+    let currentStepText = steps[currentStepIndex] || '';
+    currentStepText = currentStepText.replace(/^(?:step\s*\d+[\.\:\)\-]*\s*|\d+[\.\)\:\-]+\s*)/i, '').trim();
+
+    textEl.innerText = currentStepText;
+    badgeEl.innerText = `STEP ${String(currentStepIndex + 1).padStart(2, '0')}`;
+    counterEl.innerText = `Step ${currentStepIndex + 1} of ${steps.length}`;
+
+    prevBtn.disabled = (currentStepIndex === 0);
+
+    if (currentStepIndex === steps.length - 1) {
+        nextBtn.className = 'btn btn-terracotta';
+        nextBtn.innerHTML = '<span>Finish Cooking 🎉</span>';
+        nextBtn.onclick = function() {
+            showToast('Congratulations! You finished cooking this dish!', '🎉');
+            setTimeout(() => {
+                window.location.href = "{{ url_for('recipe_details', recipe_id=recipe.id) }}";
+            }, 1500);
+        };
+    } else {
+        nextBtn.className = 'btn btn-terracotta';
+        nextBtn.innerHTML = '<span>Next Step</span> <span>→</span>';
+        nextBtn.onclick = nextStep;
+    }
+}
+
+function nextStep() {
+    if (currentStepIndex < steps.length - 1) {
+        currentStepIndex++;
+        updateStepUI();
+    }
+}
+
+function prevStep() {
+    if (currentStepIndex > 0) {
+        currentStepIndex--;
+        updateStepUI();
+    }
+}
+
+// Global keyboard arrow navigation for Cooking Mode
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight') {
+        nextStep();
+    } else if (e.key === 'ArrowLeft') {
+        prevStep();
+    }
+});
+
+// Initialize UI synchronization immediately on load
+document.addEventListener('DOMContentLoaded', () => {
+    updateStepUI();
+});
+</script>
+{% endblock %}

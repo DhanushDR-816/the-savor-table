@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ recipe.title }} | Recipe Management System{% endblock %}
+
+{% block content %}
+<section class="recipe-form-section">
+    <div class="container">
+        <div class="form-card">
+            <div class="form-card-header">
+                <h2>Edit <span class="gradient-text">Recipe</span></h2>
+                <p>Update dish information, ingredients, or cooking steps.</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="recipe-editor-form">
+                <!-- Basic Recipe Information -->
+                <div class="form-section-title">📌 Recipe Overview</div>
+
+                <div class="form-group">
+                    <label for="title">Recipe Title <span class="req">*</span></label>
+                    <input type="text" id="title" name="title" value="{{ recipe.title }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Short Description</label>
+                    <textarea id="description" name="description" rows="3">{{ recipe.description if recipe.description else '' }}</textarea>
+                </div>
+
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label for="category_id">Category <span class="req">*</span></label>
+                        <select id="category_id" name="category_id" required>
+                            <option value="">Select Category</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if recipe.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cuisine">Cuisine</label>
+                        <input type="text" id="cuisine" name="cuisine" value="{{ recipe.cuisine if recipe.cuisine else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="difficulty">Difficulty</label>
+                        <select id="difficulty" name="difficulty">
+                            <option value="Easy" {% if recipe.difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+                            <option value="Medium" {% if recipe.difficulty == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="Hard" {% if recipe.difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label for="prep_time">Prep Time (mins)</label>
+                        <input type="number" id="prep_time" name="prep_time" min="0" value="{{ recipe.prep_time or 0 }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cook_time">Cook Time (mins)</label>
+                        <input type="number" id="cook_time" name="cook_time" min="0" value="{{ recipe.cook_time or 0 }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="servings">Servings</label>
+                        <input type="number" id="servings" name="servings" min="1" value="{{ recipe.servings or 1 }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="image">Image URL</label>
+                    <input type="url" id="image" name="image" value="{{ recipe.image if recipe.image else '' }}">
+                </div>
+
+                <!-- Dynamic Ingredients Section -->
+                <div class="form-section-title" style="margin-top: 2rem;">🛒 Ingredients List</div>
+
+                <div id="ingredientsContainer" class="ingredients-editor-container">
+                    {% if recipe.ingredients %}
+                        {% for ing in recipe.ingredients %}
+                            <div class="ingredient-row">
+                                <input type="text" name="ingredient_quantity[]" value="{{ ing.quantity if ing.quantity else '' }}" placeholder="Qty" class="ing-input-qty">
+                                <input type="text" name="ingredient_unit[]" value="{{ ing.unit if ing.unit else '' }}" placeholder="Unit" class="ing-input-unit">
+                                <input type="text" name="ingredient_name[]" value="{{ ing.name }}" placeholder="Ingredient Name" class="ing-input-name" required>
+                                <button type="button" class="btn-remove-ing" onclick="removeIngredientRow(this)" title="Remove Ingredient">✕</button>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="ingredient-row">
+                            <input type="text" name="ingredient_quantity[]" placeholder="Qty" class="ing-input-qty">
+                            <input type="text" name="ingredient_unit[]" placeholder="Unit" class="ing-input-unit">
+                            <input type="text" name="ingredient_name[]" placeholder="Ingredient Name" class="ing-input-name" required>
+                            <button type="button" class="btn-remove-ing" onclick="removeIngredientRow(this)" title="Remove Ingredient">✕</button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <button type="button" id="addIngredientBtn" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.88rem;">
+                        <span>+ Add Ingredient Row</span>
+                    </button>
+                </div>
+
+                <!-- Instructions Section -->
+                <div class="form-section-title">📖 Cooking Instructions</div>
+                <div class="form-group">
+                    <label for="instructions">Step-by-Step Instructions <span class="req">*</span></label>
+                    <textarea id="instructions" name="instructions" rows="8" required>{{ recipe.instructions }}</textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <a href="{{ url_for('recipe_details', recipe_id=recipe.id) }}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <span>Update Recipe</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }} | Member Profile{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+    <div class="container">
+        <div class="profile-grid">
+            <!-- Left Column: User Overview Card -->
+            <div class="profile-card">
+                <div class="profile-avatar">
+                    {% if user.role == 'admin' %}👑{% else %}🍳{% endif %}
+                </div>
+
+                <h2 style="font-size: 1.8rem; margin-bottom: 0.3rem;">{{ user.name }}</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">{{ user.email }}</p>
+
+                {% if user.role == 'admin' %}
+                    <span class="badge-sage" style="background: rgba(198, 93, 58, 0.15); color: var(--terracotta);">System Admin</span>
+                {% else %}
+                    <span class="badge-sage">Atelier Member</span>
+                {% endif %}
+
+                <div style="margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid var(--border-color); text-align: left; font-size: 0.88rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem;">
+                        <span style="color: var(--text-muted);">Account ID:</span>
+                        <strong>#{{ user.id }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem;">
+                        <span style="color: var(--text-muted);">Joined On:</span>
+                        <strong>{{ user.created_at.strftime('%b %d, %Y') }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Status:</span>
+                        <strong style="color: var(--sage);">● Active</strong>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-dark" style="width: 100%; border-color: rgba(198, 93, 58, 0.4); color: var(--terracotta);">
+                        <span>Sign Out</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Column: Dashboard Highlights -->
+            <div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2.5rem; margin-bottom: 2rem;">
+                    <span class="section-tag">PERSONAL KITCHEN</span>
+                    <h2 style="font-size: 2.2rem; margin-bottom: 0.8rem;">Welcome back, <em style="font-style: italic; color: var(--terracotta);">{{ user.name }}</em></h2>
+                    <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.6;">
+                        Manage your published recipes, saved pantry items, and favorite collections from your personal atelier workspace.
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.8rem; text-align: center;">
+                        <span style="font-size: 2.2rem;">📖</span>
+                        <h3 style="font-size: 2rem; margin: 0.5rem 0 0.2rem;">{{ recipes_count if recipes_count else 0 }}</h3>
+                        <p style="color: var(--text-muted); font-size: 0.88rem;">My Published Recipes</p>
+                    </div>
+
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.8rem; text-align: center;">
+                        <span style="font-size: 2.2rem;">♥</span>
+                        <h3 style="font-size: 2rem; margin: 0.5rem 0 0.2rem;">0</h3>
+                        <p style="color: var(--text-muted); font-size: 0.88rem;">Saved Favorites</p>
+                    </div>
+
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.8rem; text-align: center;">
+                        <span style="font-size: 2.2rem;">💬</span>
+                        <h3 style="font-size: 2rem; margin: 0.5rem 0 0.2rem;">0</h3>
+                        <p style="color: var(--text-muted); font-size: 0.88rem;">Reviews Written</p>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2rem;">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.8rem;">✨ The Savor Table Status</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+                        Frontend design system active with warm linen (#F7F3EA) background, terracotta accents, responsive mobile navigation, interactive pantry matching, and editorial typography.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

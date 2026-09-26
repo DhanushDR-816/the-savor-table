@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Savor Table - Recipes worth remembering. Discover dishes inspired by ingredients, cultures, and everyday cravings.">
+    <title>{% block title %}The Savor Table | Recipes worth remembering{% endblock %}</title>
+
+    <!-- Master Stylesheet -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('savortable_theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Full-Width Fixed Header Navbar -->
+    <header class="navbar-fixed-header" id="mainHeader">
+        <div class="nav-container">
+            
+            <!-- LEFT: Official Savor Table Logo -->
+            <a href="{{ url_for('index') }}" class="brand-logo-link" aria-label="The Savor Table Home">
+                <img src="{{ url_for('static', filename='images/savor-table-logo.png') }}" alt="The Savor Table - Recipes worth remembering" class="brand-logo-img">
+            </a>
+
+            <!-- CENTER: Navigation Links with Active Indicators -->
+            <ul class="nav-links-center">
+                <li class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+                    <a href="{{ url_for('index') }}" class="nav-link">
+                        <span class="active-dot">•</span>
+                        <span class="link-label">Discover</span>
+                        <span class="active-line"></span>
+                    </a>
+                </li>
+                <li class="nav-item {% if request.endpoint in ['recipes_list', 'recipe_details'] %}active{% endif %}">
+                    <a href="{{ url_for('recipes_list') }}" class="nav-link">
+                        <span class="active-dot">•</span>
+                        <span class="link-label">Recipes</span>
+                        <span class="active-line"></span>
+                    </a>
+                </li>
+                <li class="nav-item {% if request.endpoint == 'my_kitchen' %}active{% endif %}">
+                    <a href="{{ url_for('my_kitchen') }}" class="nav-link">
+                        <span class="active-dot">•</span>
+                        <span class="link-label">My Kitchen</span>
+                        <span class="active-line"></span>
+                    </a>
+                </li>
+                <li class="nav-item {% if request.endpoint == 'collections' %}active{% endif %}">
+                    <a href="{{ url_for('collections') }}" class="nav-link">
+                        <span class="active-dot">•</span>
+                        <span class="link-label">Collections</span>
+                        <span class="active-line"></span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- RIGHT: Expandable Search + Profile / Auth Dropdown -->
+            <div class="nav-actions-right">
+                
+                <!-- Expandable Search Interaction -->
+                <div class="nav-search-wrapper" id="navSearchWrapper">
+                    <button type="button" class="nav-search-trigger" id="navSearchTrigger" aria-label="Toggle Search">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                    <form action="{{ url_for('recipes_list') }}" method="GET" class="nav-search-form" id="navSearchForm">
+                        <input type="text" name="q" placeholder="Search title or ingredient..." id="navSearchInput" aria-label="Search query">
+                        <button type="submit" class="nav-search-submit" aria-label="Submit Search">➜</button>
+                    </form>
+                </div>
+
+                <!-- Food-Themed Culinary Theme Switch -->
+                <div class="culinary-theme-switch-container">
+                    <div class="culinary-theme-switch" id="culinaryThemeSwitchDesktop" role="radiogroup" aria-label="Table Theme Selection">
+                        <div class="theme-switch-slider"></div>
+                        <button type="button" 
+                                class="theme-option-btn active" 
+                                id="themeBtnDayDesktop" 
+                                data-theme-val="light"
+                                role="radio" 
+                                aria-checked="true"
+                                aria-label="Switch to Day Table theme">
+                            <svg class="theme-culinary-icon icon-day" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="7"></circle>
+                                <circle cx="12" cy="12" r="4.2"></circle>
+                                <path d="M4.5 6.5v3.5a1.2 1.2 0 0 0 2.4 0V6.5M5.7 10v7.5"></path>
+                                <path d="M19.5 6.5v11M19.5 6.5c-1.5 1.8-1.5 4.5 0 5.5"></path>
+                            </svg>
+                            <span class="theme-btn-label">DAY TABLE</span>
+                        </button>
+                        
+                        <span class="theme-switch-divider" aria-hidden="true">|</span>
+                        
+                        <button type="button" 
+                                class="theme-option-btn" 
+                                id="themeBtnNightDesktop" 
+                                data-theme-val="dark"
+                                role="radio" 
+                                aria-checked="false"
+                                aria-label="Switch to Night Table theme">
+                            <svg class="theme-culinary-icon icon-night" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M8 4c.4.8.4 1.8 0 2.5M12 3c.4.8.4 1.8 0 2.5M16 4c.4.8.4 1.8 0 2.5"></path>
+                                <path d="M4 11h16a1 1 0 0 1 1 1 8.5 8.5 0 0 1-8.5 8.5A8.5 8.5 0 0 1 3 12a1 1 0 0 1 1-1z"></path>
+                            </svg>
+                            <span class="theme-btn-label">NIGHT</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-divider"></div>
+
+                <!-- Authentication & User Profile Area -->
+                {% if session.get('user_id') %}
+                    <div class="user-profile-dropdown-wrapper" id="userProfileDropdown">
+                        <button type="button" class="user-chip-btn" id="userChipBtn" aria-expanded="false" aria-label="User Account Menu">
+                            <span class="user-avatar-initial">{{ session.get('user_name')[0]|upper }}</span>
+                            <span class="user-chip-name">{{ session.get('user_name') }}</span>
+                            <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+
+                        <div class="profile-dropdown-menu" id="profileDropdownMenu">
+                            <div class="dropdown-header">
+                                <strong>{{ session.get('user_name') }}</strong>
+                                <small>{{ session.get('user_email') }}</small>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('profile') }}" class="dropdown-item">
+                                <span>👤 My Profile</span>
+                            </a>
+                            <a href="{{ url_for('my_kitchen') }}" class="dropdown-item">
+                                <span>🍳 My Kitchen</span>
+                            </a>
+                            <a href="{{ url_for('collections') }}" class="dropdown-item">
+                                <span>🔖 Collections</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('logout') }}" class="dropdown-item text-danger">
+                                <span>🚪 Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="auth-btn-group">
+                        <a href="{{ url_for('login') }}" class="nav-auth-link">Login</a>
+                        <a href="{{ url_for('register') }}" class="nav-join-btn">Join Table</a>
+                    </div>
+                {% endif %}
+
+                <!-- Mobile Menu Trigger -->
+                <button type="button" class="mobile-menu-trigger" id="mobileMenuTrigger" aria-label="Open Mobile Menu" aria-expanded="false">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="4" y1="7" x2="20" y2="7"></line>
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <line x1="4" y1="17" x2="16" y2="17"></line>
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Mobile Off-Canvas Navigation Panel -->
+    <div class="mobile-nav-panel" id="mobileNavPanel" aria-hidden="true">
+        <div class="mobile-panel-overlay" id="mobilePanelOverlay"></div>
+        <div class="mobile-panel-content">
+            <div class="mobile-panel-header">
+                <a href="{{ url_for('index') }}" class="brand-logo-link-mobile" aria-label="The Savor Table Home">
+                    <img src="{{ url_for('static', filename='images/savor-table-logo.png') }}" alt="The Savor Table - Recipes worth remembering" class="brand-logo-img-mobile">
+                </a>
+                <button type="button" class="mobile-panel-close" id="mobilePanelClose" aria-label="Close Menu">✕</button>
+            </div>
+
+            <div class="mobile-panel-body">
+                <ul class="mobile-nav-links">
+                    <li><a href="{{ url_for('index') }}" class="mobile-link {% if request.endpoint == 'index' %}active{% endif %}">DISCOVER</a></li>
+                    <li><a href="{{ url_for('recipes_list') }}" class="mobile-link {% if request.endpoint in ['recipes_list', 'recipe_details'] %}active{% endif %}">RECIPES</a></li>
+                    <li><a href="{{ url_for('my_kitchen') }}" class="mobile-link {% if request.endpoint == 'my_kitchen' %}active{% endif %}">MY KITCHEN</a></li>
+                    <li><a href="{{ url_for('collections') }}" class="mobile-link {% if request.endpoint == 'collections' %}active{% endif %}">COLLECTIONS</a></li>
+                </ul>
+
+                <div class="mobile-panel-footer">
+                    <!-- Mobile Culinary Theme Switch -->
+                    <div class="mobile-theme-switch-wrapper" style="margin-bottom: 1.2rem; display: flex; justify-content: center;">
+                        <div class="culinary-theme-switch" id="culinaryThemeSwitchMobile" role="radiogroup" aria-label="Mobile Theme Selection">
+                            <div class="theme-switch-slider"></div>
+                            <button type="button" 
+                                    class="theme-option-btn active" 
+                                    id="themeBtnDayMobile" 
+                                    data-theme-val="light" 
+                                    role="radio" 
+                                    aria-checked="true" 
+                                    aria-label="Switch to Day Table light mode">
+                                <svg class="theme-culinary-icon icon-day" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="7"></circle>
+                                    <circle cx="12" cy="12" r="4.2"></circle>
+                                    <path d="M4.5 6.5v3.5a1.2 1.2 0 0 0 2.4 0V6.5M5.7 10v7.5"></path>
+                                    <path d="M19.5 6.5v11M19.5 6.5c-1.5 1.8-1.5 4.5 0 5.5"></path>
+                                </svg>
+                                <span class="theme-btn-label">DAY TABLE</span>
+                            </button>
+                            <span class="theme-switch-divider" aria-hidden="true">|</span>
+                            <button type="button" 
+                                    class="theme-option-btn" 
+                                    id="themeBtnNightMobile" 
+                                    data-theme-val="dark" 
+                                    role="radio" 
+                                    aria-checked="false" 
+                                    aria-label="Switch to Night Table dark mode">
+                                <svg class="theme-culinary-icon icon-night" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M8 4c.4.8.4 1.8 0 2.5M12 3c.4.8.4 1.8 0 2.5M16 4c.4.8.4 1.8 0 2.5"></path>
+                                    <path d="M4 11h16a1 1 0 0 1 1 1 8.5 8.5 0 0 1-8.5 8.5A8.5 8.5 0 0 1 3 12a1 1 0 0 1 1-1z"></path>
+                                </svg>
+                                <span class="theme-btn-label">NIGHT</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {% if session.get('user_id') %}
+                        <a href="{{ url_for('profile') }}" class="btn btn-ghost btn-full" style="margin-bottom: 0.8rem;">Profile</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-terracotta btn-full">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-ghost btn-full" style="margin-bottom: 0.8rem;">Login</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-terracotta btn-full">Create Account</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Notifications Area -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container" style="margin-top: 1.5rem;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span class="alert-icon">
+                            {% if category == 'success' %}✓{% elif category == 'warning' %}⚠️{% elif category == 'danger' %}✕{% else %}ℹ️{% endif %}
+                        </span>
+                        <span class="alert-text">{{ message }}</span>
+                        <button class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content Area with Fixed Navbar Padding Offset -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Editorial Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div style="margin-bottom: 1.2rem;">
+                        <img src="{{ url_for('static', filename='images/savor-table-logo.png') }}" alt="The Savor Table - Recipes worth remembering" class="footer-logo-img">
+                    </div>
+                    <p style="color: var(--text-muted); max-width: 380px; font-size: 0.95rem; line-height: 1.6;">
+                        A curated digital culinary table celebrating craftsmanship, ingredient-first cooking, and thoughtful recipe discovery. Designed as a BCA Major Project.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 style="font-family: var(--font-sans); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--terracotta); margin-bottom: 1.2rem;">Navigation</h4>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">Discover</a></li>
+                        <li><a href="{{ url_for('recipes_list') }}">Explore Recipes</a></li>
+                        <li><a href="{{ url_for('my_kitchen') }}">My Kitchen Pantry</a></li>
+                        <li><a href="{{ url_for('collections') }}">Saved Collections</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 style="font-family: var(--font-sans); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--terracotta); margin-bottom: 1.2rem;">Account & Details</h4>
+                    <ul class="footer-links">
+                        {% if session.get('user_id') %}
+                            <li><a href="{{ url_for('profile') }}">My Profile</a></li>
+                            <li><a href="{{ url_for('logout') }}">Sign Out</a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('login') }}">Member Sign In</a></li>
+                            <li><a href="{{ url_for('register') }}">Join Table</a></li>
+                        {% endif %}
+                        <li><span style="color: var(--text-dim);">BCA College Project 2026</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 The Savor Table • Recipes worth remembering. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

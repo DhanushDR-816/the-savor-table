@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Recipes | The Savor Table{% endblock %}
+
+{% block content %}
+<section style="padding: 4rem 0 6rem;">
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span class="section-tag">CULINARY CATALOG</span>
+                <h1 class="section-editorial-title" style="font-size: 2.8rem; margin-bottom: 0.4rem;">Explore The Savor Table</h1>
+                <p style="color: var(--text-muted); font-size: 1.05rem;">Discover dishes inspired by ingredients, cultures, and everyday cravings.</p>
+            </div>
+            {% if search_query or active_cat or active_cuisine or active_diff %}
+                <a href="{{ url_for('recipes_list') }}" class="btn btn-ghost" style="padding: 0.6rem 1.2rem; font-size: 0.88rem;">Clear Filters ✕</a>
+            {% endif %}
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.8rem; margin-bottom: 3rem; box-shadow: var(--shadow-subtle);">
+            <form method="GET" action="{{ url_for('recipes_list') }}" id="recipesFilterForm" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div style="display: flex; gap: 1rem; align-items: center; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-pill); padding: 0.4rem 0.6rem 0.4rem 1.4rem; flex-wrap: wrap;">
+                    <span style="font-size: 1.1rem; opacity: 0.6;">🔍</span>
+                    <input type="text" name="q" value="{{ search_query if search_query else '' }}" placeholder="Search recipes by title, ingredients, or cuisine..." style="flex: 1; min-width: 220px; border: none; background: transparent; outline: none; color: var(--text-main);">
+                    {% if search_query or active_cat or active_cuisine or active_diff %}
+                        <a href="{{ url_for('recipes_list') }}" class="btn btn-ghost" style="padding: 0.4rem 1rem; font-size: 0.82rem;" title="Reset all filters">Clear Filters ✕</a>
+                    {% endif %}
+                    <button type="submit" class="btn btn-terracotta" style="padding: 0.6rem 1.4rem; font-size: 0.85rem;">Search</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; align-items: flex-end;">
+                    <div>
+                        <label style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Category</label>
+                        <select name="category" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if active_cat == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Cuisine</label>
+                        <select name="cuisine" onchange="this.form.submit()">
+                            <option value="">All Cuisines</option>
+                            {% for c in cuisines %}
+                                <option value="{{ c }}" {% if active_cuisine == c %}selected{% endif %}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Difficulty</label>
+                        <select name="difficulty" onchange="this.form.submit()">
+                            <option value="">All Difficulties</option>
+                            <option value="Easy" {% if active_diff == 'Easy' %}selected{% endif %}>Easy</option>
+                            <option value="Medium" {% if active_diff == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="Hard" {% if active_diff == 'Hard' %}selected{% endif %}>Hard</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Sort By</label>
+                        <select name="sort" onchange="this.form.submit()">
+                            <option value="newest" {% if not active_sort or active_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                            <option value="oldest" {% if active_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                            <option value="title" {% if active_sort == 'title' %}selected{% endif %}>Title (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Catalog Grid -->
+        {% if recipes %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 2.5rem;">
+                {% for recipe in recipes %}
+                    <div class="editorial-card">
+                        <div class="card-img-wrapper">
+                            <img src="{{ recipe.image if recipe.image else 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80' }}"
+                                 alt="{{ recipe.title }}"
+                                 class="card-img"
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';">
+                            <form method="POST" action="{{ url_for('toggle_favorite_recipe', recipe_id=recipe.id) }}" class="favorite-action-form" data-recipe-id="{{ recipe.id }}">
+                                <button type="submit" class="favorite-heart-btn {% if user_favorite_ids and recipe.id in user_favorite_ids %}liked{% endif %}" data-recipe-id="{{ recipe.id }}" title="Toggle Favorite">♥</button>
+                            </form>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-kicker">{{ recipe.category.name if recipe.category else 'Recipe' }} • {{ recipe.cuisine or 'General' }}</div>
+                            <h3 class="card-title">{{ recipe.title }}</h3>
+                            <p class="card-excerpt">{{ recipe.description[:110] if recipe.description else '' }}{% if recipe.description and recipe.description|length > 110 %}...{% endif %}</p>
+                            <div class="card-meta-bar">
+                                <span>⏱️ {{ (recipe.prep_time or 0) + (recipe.cook_time or 0) }} mins • {{ recipe.difficulty or 'Easy' }}</span>
+                                <a href="{{ url_for('recipe_details', recipe_id=recipe.id) }}" class="btn btn-terracotta" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Read Recipe</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Clean Editorial Empty State -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 4rem 2rem; text-align: center; max-width: 600px; margin: 3rem auto; box-shadow: var(--shadow-card);">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🍳</div>
+                <h3 style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-main);">No Recipes Found</h3>
+                {% if search_query %}
+                    <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.6;">We couldn't find a recipe matching <strong>"{{ search_query }}"</strong>{% if active_cat or active_cuisine or active_diff %} with the selected filters{% endif %}.</p>
+                {% elif active_cat or active_cuisine or active_diff %}
+                    <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.6;">We couldn't find any recipes matching your selected category or filter criteria.</p>
+                {% else %}
+                    <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.6;">There are currently no recipes available in the catalog.</p>
+                {% endif %}
+                <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.6rem;">Try another search term or clear the filters to explore the full catalog.</p>
+                <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="{{ url_for('recipes_list') }}" class="btn btn-outline-dark" style="padding: 0.8rem 1.6rem;">Clear Filters ✕</a>
+                    {% if session.get('user_id') %}
+                        <a href="{{ url_for('add_recipe') }}" class="btn btn-terracotta" style="padding: 0.8rem 1.6rem;">+ Add Recipe</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
